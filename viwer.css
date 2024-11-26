@@ -1,0 +1,133 @@
+body {
+    background-color: #393636;
+    padding: 0;
+    height: 670px;
+  }
+  
+  section.row {
+    height: 100%;
+  }
+  
+  div.faixa {
+    background-color: #20805F;
+    height: 3rem;
+  }
+  
+  h3 {
+    font: 15px arial;
+    color: #fff;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  input[type=number]::-webkit-inner-spin-button,
+  input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  
+  input {
+    border: 0;
+    padding: 0;
+    text-align: center;
+    width: 155px;
+    height: 45px;
+    background-color: transparent;
+    border: transparent;
+    font-size: 20px;
+    outline: none;
+    color: #fff;
+  }
+  
+  p {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font: 15px arial;
+    width: 155px;
+    height: 45px;
+    font-size: 20px;
+    color: #fff
+  }
+  
+  
+  .dinheiro {
+    width: 50px;
+    height: 45px;
+  }
+  
+  .borda {
+    border: 0;
+    padding: 0;
+    width: 163px;
+    height: 55px;
+    border-radius: 15px;
+    background-color: #534F4F;
+    border: solid #20805F 4px;
+  
+  }
+  .tabela-body {
+    display: block; /* Permite limitar a altura */
+    max-height: 500px; /* Altura máxima da tabela rolável */
+    overflow-y: auto; /* Adiciona rolagem vertical quando necessário */
+  }
+
+  /* Alinha corretamente as colunas entre thead e tbody */
+  .table thead, 
+  .table tbody tr {
+    display: table;
+    width: 100%; /* Garante que a largura do thead e tbody coincida */
+    table-layout: fixed; /* Mantém o layout das células */
+  }
+
+  /* Remove espaço extra na rolagem (opcional) */
+  .tabela-body::-webkit-scrollbar {
+    width: 6px; /* Largura da barra de rolagem */
+  }
+
+  .tabela-body::-webkit-scrollbar-thumb {
+    background-color: #888; /* Cor do "polegar" da barra */
+    border-radius: 10px;
+  }
+
+  .tabela-body::-webkit-scrollbar-thumb:hover {
+    background-color: #555; /* Cor ao passar o mouse */
+  }
+
+.table.text-center.table-sm{
+  width: 120%; 
+  height: auto;
+   margin: 0 auto;
+   --bs-table-bg: #534F4F; 
+   --bs-table-color:#fff;
+}
+
+  /* Estilo personalizado para o botão */
+.form-control.me-2 {
+  width: 150px;
+  background-color: #534F4F; /* Cor de fundo personalizada */
+  color: white; /* Cor da fonte */
+  border: 2px solid #20805F; /* Cor da borda */
+  padding: 5px 10px; /* Ajuste para deixar o botão menor */
+  font-size: 14px; /* Tamanho da fonte */
+  border-radius: 5px; /* Bordas arredondadas */
+  transition: background-color 0.3s; /* Efeito de transição ao passar o mouse */
+}
+
+.btn.btn-primary{
+  background-color: #20805F; /* Cor de fundo personalizada */
+  color: white; /* Cor da fonte */
+  border: 2px solid #20805F; /* Cor da borda */
+  padding: 5px 10px; /* Ajuste para deixar o botão menor */
+  font-size: 14px; /* Tamanho da fonte */
+  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+
+.btn.btn-primary:active{
+  background-color: #20805F;
+  border-color: #393636;
+}
