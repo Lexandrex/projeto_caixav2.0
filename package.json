@@ -25,12 +25,8 @@
     "electron": "33.0.2"
   },
   "dependencies": {
-    "cors": "^2.8.5",
+    "@supabase/supabase-js": "^2.47.7",
     "dotenv": "^16.4.5",
-    "electron-squirrel-startup": "^1.0.1",
-    "express": "^4.21.1",
-    "mysql": "^2.18.1",
-    "mysql2": "^3.11.4",
-    "sequelize": "^6.37.5"
+    "electron-squirrel-startup": "^1.0.1"
   }
 }
