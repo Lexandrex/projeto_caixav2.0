@@ -57,9 +57,9 @@ async function enviarVenda() {
   }
 
   // Obtem a hora e a data atual
-  const horaAtual = new Date().toLocaleTimeString(); // Hora no formato local
+  const horaAtual = new Date().toLocaleTimeString();
   const agora = new Date();
-  const dataAtual = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}-${String(agora.getDate()).padStart(2, '0')}`; // Data formatada manualmente como YYYY-MM-DD
+  const dataAtual = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}-${String(agora.getDate()).padStart(2, '0')}`;
 
   console.log("Enviando venda: ", {
     quantidade_12: valor12,
@@ -75,8 +75,8 @@ async function enviarVenda() {
       quantidade_12: valor12,
       quantidade_20: valor20,
       formaPagamento: formaPagamento,
-      hora: horaAtual, // Adiciona a hora ao registro
-      data: dataAtual, // Adiciona a data ajustada ao registro
+      hora: horaAtual,
+      data: dataAtual,
     },
   ]);
 
@@ -88,39 +88,54 @@ async function enviarVenda() {
     console.log("Venda inserida com sucesso:", data);
     alert("Venda registrada com sucesso!");
     carregarVendas(); // Atualiza a tabela com os dados mais recentes
+    limparCampos();   // Limpa os campos e os valores exibidos
     return true;
   }
 }
 
+document.addEventListener("DOMContentLoaded", () => {
+  // Adiciona o event listener ao botão
+  document.getElementById("btn-filtrar").addEventListener("click", carregarVendas);
+});
 
-
-// Função para carregar as vendas do Supabase
+// Certifique-se de que a função está fora de qualquer bloco
 async function carregarVendas() {
   const tabelaBody = document.querySelector(".tabela-body");
   tabelaBody.innerHTML = ""; // Limpa a tabela antes de preencher
 
-  // Filtro por data, se necessário
-  const dataFiltro = document.querySelector("#data-filtro").value;
+  // Captura o valor do campo de data no formato YYYY-MM-DD
+  let dataFiltro = document.querySelector("#data-filtro").value;
+
+  // Se nenhuma data foi informada, utiliza a data atual
+  if (!dataFiltro) {
+    const agora = new Date();
+    dataFiltro = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}-${String(agora.getDate()).padStart(2, '0')}`;
+    document.querySelector("#data-filtro").value = dataFiltro; // Preenche o input com a data atual
+  }
 
   try {
     let query = supabase.from("vendas").select("*");
 
-    // Aplica o filtro de data, se estiver selecionado
-    if (dataFiltro) {
-      query = query.eq("data", dataFiltro);
-    }
+    // Aplica o filtro de data
+    query = query.eq("data", dataFiltro);
 
     const { data, error } = await query.order("hora", { ascending: false });
 
     if (error) throw error;
 
-    // Popula a tabela com os dados
+    // Verifica se há dados retornados
+    if (data.length === 0) {
+      tabelaBody.innerHTML = `<tr><td colspan="4" class="text-center">Nenhuma venda encontrada para a data selecionada.</td></tr>`;
+      return;
+    }
+
+    // Popula a tabela com os dados retornados
     data.forEach((venda) => {
       const linha = document.createElement("tr");
       linha.innerHTML = `
         <td>${venda.quantidade_12}</td>
         <td>${venda.quantidade_20}</td>
-        <td>R$ ${parseFloat(venda.total).toFixed(2)}</td>
+        <td>R$ ${venda.total ? parseFloat(venda.total).toFixed(2) : '0.00'}</td>
         <td>${venda.hora}</td>
       `;
       tabelaBody.appendChild(linha);
@@ -130,6 +145,10 @@ async function carregarVendas() {
     alert("Erro ao carregar as vendas.");
   }
 }
+
+
+
+
 
 // Função para imprimir
 function imprimir() {
