@@ -21,7 +21,40 @@ body {
     justify-content: center;
     align-items: center;
   }
+
+  .dropbar {
+    width: 50vw;
+    height: 0;
+    border-radius: 0 0 15px 15px;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%); /* Para centralizar horizontalmente */
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    overflow: hidden;
+    display: flex;  /* Flexbox para alinhamento */
+    justify-content: center;  /* Alinha o conteúdo horizontalmente */
+    align-items: center;  /* Alinha o conteúdo verticalmente */
+    transition: height 0.5s ease-out;
+    white-space: nowrap; /* Impede quebra de linha no texto */
+  }
   
+  .dropbar.error {
+    background-color: #be0707b8; /* Vermelho para erro */
+  }
+
+  .dropbar.padrao {
+    background-color: #534F4F; /* cor padrão */
+  }
+  .dropbar.show {
+    height: 50px; /* Expande a barra */
+  }
+
+  .dropbar.hide {
+    height: 0; /* Encolhe a barra */
+  }
+
   input[type=number]::-webkit-inner-spin-button,
   input[type=number]::-webkit-outer-spin-button {
     -webkit-appearance: none;
@@ -108,7 +141,7 @@ body {
   /* Estilo personalizado para o botão */
 .form-control.me-2 {
   width: 150px;
-  background-color: #534F4F; /* Cor de fundo personalizada */
+  background-color: #534F4F; /* Cor de fundo */
   color: white; /* Cor da fonte */
   border: 2px solid #20805F; /* Cor da borda */
   padding: 5px 10px; /* Ajuste para deixar o botão menor */

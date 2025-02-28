@@ -52,7 +52,7 @@ async function enviarVenda() {
 
   // Verifica se os valores de quantidade são inválidos
   if (valor12 === 0 && valor20 === 0) {
-    alert("Por favor, insira pelo menos um valor válido para registrar uma venda.");
+    mostrarAlerta("Por favor, insira pelo menos um valor válido para registrar uma venda.", "error");
     return; // Interrompe a execução da função
   }
 
@@ -83,12 +83,11 @@ async function enviarVenda() {
   // Verifica erros ou sucesso
   if (error) {
     console.error("Erro ao inserir venda:", error);
-    alert(`Erro ao registrar a venda: ${error.message}`);
+    mostrarAlerta("Erro ao registrar a venda", "error");
   } else {
     console.log("Venda inserida com sucesso:", data);
-    alert("Venda registrada com sucesso!");
+    mostrarAlerta("Venda registrada com sucesso!", "padrao");
     carregarVendas(); // Atualiza a tabela com os dados mais recentes
-    limparCampos();   // Limpa os campos e os valores exibidos
     return true;
   }
 }
@@ -121,6 +120,7 @@ async function carregarVendas() {
 
     const { data, error } = await query.order("hora", { ascending: false });
 
+    //lança um error
     if (error) throw error;
 
     // Verifica se há dados retornados
@@ -140,12 +140,42 @@ async function carregarVendas() {
       `;
       tabelaBody.appendChild(linha);
     });
-  } catch (err) {
-    console.error("Erro ao carregar vendas:", err);
-    alert("Erro ao carregar as vendas.");
+  } catch (error) {
+    console.error("Erro ao carregar vendas:", error);
+   // Repetir a exibição do erro a cada 15 segundos
+   setInterval(() => {
+    mostrarAlerta("Erro ao carregar vendas.", "error");
+  }, 4000); // 15 segundos
   }
 }
 
+function mostrarAlerta(mensagem, tipo = 'padrao') {
+  const alertBox = document.querySelector(".dropbar");
+  const alertMessage = document.getElementById("AlertMensagem");
+
+  alertMessage.textContent = mensagem; // Define a mensagem
+
+  // Remove as classes anteriores de erro ou padrao
+  alertBox.classList.remove("show", "hide", "padrao", "error");
+
+  // Adiciona a classe correspondente ao tipo de mensagem
+  if (tipo === 'error') {
+      alertBox.classList.add("error"); // Adiciona a classe de erro
+  } else {
+      alertBox.classList.add("padrao"); // Adiciona a classe padrao 
+  }
+
+  // Faz a barra expandir
+  alertBox.classList.add("show");
+
+  // Após 3 segundos, esconde a barra
+  setTimeout(() => {
+      alertBox.classList.add("hide"); // Encolhe a barra
+      setTimeout(() => {
+          alertBox.classList.remove("show", "hide"); // Reseta o estado
+      }, 500); // Tempo da animação
+  }, 3000);
+}
 
 
 
@@ -154,8 +184,8 @@ async function carregarVendas() {
 function imprimir() {
   try {
     window.print();
-  } catch (err) {
-    console.error("Erro ao imprimir:", err);
+  } catch (error) {
+    console.error("Erro ao imprimir:", error);
   }
 }
 
