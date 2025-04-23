@@ -13,6 +13,7 @@ A tabela abaixo descreve a estrutura utilizada para armazenar informações sobr
 | total         | numeric                      | numeric |
 | hora          | time without time zone       | time    |
 
+
 Cada coluna representa um atributo essencial para o registro das vendas realizadas, incluindo:
 - **id_venda**: Identificador único da venda.
 - **data**: Data da venda.
