@@ -1,8 +1,7 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-// Configuração do Supabase
-const SUPABASE_URL = 'https://vvrjzlsaizsbttinnoyy.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2cmp6bHNhaXpzYnR0aW5ub3l5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzMyNjc0ODMsImV4cCI6MjA0ODg0MzQ4M30.ZYx6PMvp96VVaKptEMIIBHEHOsI23MzKbuqkl4awn3A';
+const SUPABASE_URL = 'https://npvyxmorsaitlpscbcgq.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wdnl4bW9yc2FpdGxwc2NiY2dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU0NTAyMDEsImV4cCI6MjA2MTAyNjIwMX0.VSLgSvLOYgEhul-QbXXIb4r91HD6_r76__QzElzOulM';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Variáveis globais
