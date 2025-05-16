@@ -87,11 +87,27 @@ body {
   }
   
   
-  .dinheiro {
+  .icone {
     width: 50px;
     height: 45px;
   }
   
+  .painel-principal {
+    max-width: 500px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .espacamento-uniforme {
+    width: 100%;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  .row {
+    width: 100%;
+  }
   .borda {
     border: 0;
     padding: 0;
@@ -100,8 +116,18 @@ body {
     border-radius: 15px;
     background-color: #534F4F;
     border: solid #20805F 4px;
-  
   }
+
+  .bordinha {
+    padding: 0;
+    width: 55px;
+    height: 55px;
+    border-radius: 15px;
+    background-color: #534F4F;
+    border: solid #20805F 4px;
+  }
+  
+
   .tabela-body {
     display: block; /* Permite limitar a altura */
     max-height: 500px; /* Altura máxima da tabela rolável */
@@ -163,4 +189,59 @@ body {
 .btn.btn-primary:active{
   background-color: #20805F;
   border-color: #393636;
+}
+
+/* Dropbar personalizada para divisão de pagamento */
+.dropbar-cartao {
+  background-color: #534F4F;
+  border: 4px solid #20805F;
+  border-radius: 15px;
+  padding: 15px;
+  position: absolute;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 300px;
+  width: 90%;
+  z-index: 100;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dropbar-cartao label {
+  font-size: 14px;
+  color: #fff;
+  text-align: left;
+}
+
+.dropbar-cartao input {
+  background-color: transparent;
+  border: 2px solid #20805F;
+  color: white;
+  padding: 6px;
+  border-radius: 5px;
+  font-size: 16px;
+  text-align: center;
+  width: 100%;
+}
+
+.btn-dropbar {
+  background-color: #20805F;
+  color: white;
+  border: 2px solid #20805F;
+  border-radius: 5px;
+  padding: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.btn-dropbar:hover {
+  background-color: #1b6f51;
+}
+
+.d-none {
+  display: none;
 }

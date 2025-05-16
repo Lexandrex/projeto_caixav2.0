@@ -21,28 +21,41 @@
 <body>
   <script type="module" src="cod.js"></script>
   <!--FAIXA VERDE LÁ EM CIMA-->
-  <div class="faixa">
-  </div>
+  <div class="faixa"></div>
    <div class="dropbar">
     <p id="AlertMensagem"></p>
    </div>
-  <section class="container row d-flex justify-content-center align-items-center">
 
-    <section class="col" onmouseover="somarValores()">
+  <section class="container mt-5 row d-flex justify-content-center align-items-center">
 
-      <!--INPUT NO PLURAL-->
-      <div class="row">
-        <div class="col ms-2 d-flex justify-content-center align-items-center"><!--input 12-->
-          <div class="borda ">
-            <input type="number" class="valor12" min="0" placeholder="12,00">
-          </div>
+    <section class="col">
+      <div class="painel-principal" onmouseover="somarValores()">
+      <!--INPUTS -->
+      <div class="d-flex justify-content-between align-items-center espacamento-uniforme">
+        <div class="borda">
+          <input type="number" class="valor12" min="0" placeholder="12,00">
         </div>
-        <div class="col  d-flex justify-content-center align-items-center"><!--input 20-->
-          <div class="borda">
-            <input type="number" class="valor20" min="0" placeholder="20,00">
-          </div>
+          <!-- Botão % -->
+<button id="btndividi" class="bordinha text-white">%</button>
+
+<!-- Dropbar customizada (inicialmente oculta) -->
+<div id="bordinha-dropbar" class="dropbar-cartao d-none">
+  <div class="conteudo-dropbar">
+    <label for="valorCartao">Cartão:</label>
+    <input type="number" id="valorCartao" placeholder="R$ em cartão">
+
+    <label for="valorDinheiro">Dinheiro:</label>
+    <input type="number" id="valorDinheiro" placeholder="R$ em dinheiro">
+
+    <button id="confirmarDivisao" class="btn-dropbar">Confirmar</button>
+  </div>
+</div>
+
+        <div class="borda">
+          <input type="number" class="valor20" min="0" placeholder="20,00">
         </div>
       </div>
+      
 
       <!--conjunto de output do meio-->
       <div class="row " onmouseover="descontarValores()">
@@ -75,20 +88,19 @@
 
         <div class="col ms-2 d-flex justify-content-center">
           <button class="borda" id="btnCartao">
-            <img class="dinheiro" src="imagens/cartao-de-credito.png" alt="">
+            <img class="icone" src="imagens/cartao-de-credito.png" alt="">
           </button>
         </div>
 
         <div class="col d-flex justify-content-center">
           <button class="borda" id="btnDinheiro">
-            <img class="dinheiro" src="imagens/dinheiro.png" alt="">
+            <img class="icone" src="imagens/dinheiro.png" alt="">
           </button>
         </div>
       </div>
-
+       </div>
     </section> 
     <section class="col">
-
       <div class="container">
         <!-- Campo para selecionar a data -->
         <div class="mb-3">
@@ -97,9 +109,20 @@
             <button id="btn-filtrar" class="btn btn-primary">Filtrar</button>
           </div>
         </div>
-    </div>
-    
         
+
+      <button id="btn-lojas" class="btn btn-primary">Lojas</button>
+<div id="dropdown-lojas" class="dropdown mt-2 d-none">
+  <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+    <span id="lojaSelecionadaLabel">Selecionar Loja</span>
+  </button>
+  <ul class="dropdown-menu" id="lista-lojas">
+    <!-- Lojas aparecem aqui -->
+  </ul>
+  <button class="btn btn-primary">criar loja</button>
+</div>
+
+    </div>
       <div class="container">
         <table class="table text-center table-sm" id="tabela-vendas">
           <thead>

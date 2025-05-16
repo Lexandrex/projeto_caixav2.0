@@ -4,31 +4,99 @@ const SUPABASE_URL = 'https://npvyxmorsaitlpscbcgq.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wdnl4bW9yc2FpdGxwc2NiY2dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU0NTAyMDEsImV4cCI6MjA2MTAyNjIwMX0.VSLgSvLOYgEhul-QbXXIb4r91HD6_r76__QzElzOulM';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Variáveis globais
-let soma = 0;
-let formaPagamento = "";
+let contadorCliques = 0;
+let tempoUltimoClique = 0;
+const LIMITE_CLIQUES = 5;
+const INTERVALO_MAX = 3000; // 3 segundos entre cliques
+let lojaSelecionadaId = null;
 
-// Função para calcular o total
-function somarValores() {
+document.getElementById("btn-lojas").addEventListener("click", () => {
+  const agora = Date.now();
+
+  // Reinicia se demorar demais
+  if (agora - tempoUltimoClique > INTERVALO_MAX) {
+    contadorCliques = 0;
+  }
+
+  contadorCliques++;
+  tempoUltimoClique = agora;
+
+  if (contadorCliques === LIMITE_CLIQUES) {
+    contadorCliques = 0;
+    document.getElementById("dropdown-lojas").classList.remove("d-none");
+    carregarLojas();
+  }
+});
+
+async function carregarLojas() {
+  const { data: lojas, error } = await supabase.from("lojas").select("*");
+
+  if (error) {
+    mostrarAlerta("Erro ao carregar lojas", "error");
+    return;
+  }
+
+  const lista = document.getElementById("lista-lojas");
+  lista.innerHTML = ""; // limpa
+
+  lojas.forEach(loja => {
+    const item = document.createElement("button");
+    item.classList.add("dropdown-item");
+    item.textContent = loja.nome;
+
+    item.onclick = () => {
+      lojaSelecionadaId = loja.id;
+      carregarVendas();
+
+      // Atualiza o texto do botão
+      document.getElementById("lojaSelecionadaLabel").textContent = `Loja: ${loja.nome}`;
+
+      // Oculta novamente o dropdown
+      document.getElementById("dropdown-lojas").classList.add("d-none");
+
+      // Alerta de seleção
+      mostrarAlerta(`Loja "${loja.nome}" selecionada com sucesso!`, "padrao");
+
+      // Reset contador por segurança
+      contadorCliques = 0;
+    };
+
+    lista.appendChild(item);
+  });
+ }
+
+
+ // Variáveis globais
+ let soma = 0;
+ let formaPagamento = "";
+
+ // Função para calcular o total
+ function somarValores() {
   const valor12 = document.querySelector(".valor12").value || 0;
   const valor20 = document.querySelector(".valor20").value || 0;
 
   soma = parseInt(valor12) * 12 + parseInt(valor20) * 20;
   document.querySelector(".resultado").innerHTML = soma;
-}
+ }
 
-// Função para calcular o troco
-function descontarValores() {
+ // Função para calcular o troco
+ function descontarValores() {
   const recebido = document.querySelector(".recebido").value || 0;
   const troco = parseInt(recebido) - parseInt(soma);
   document.querySelector(".troco").innerHTML = troco;
-}
+ }
 
+ function limparCampos(){
+  document.querySelector(".valor12").value = "";
+  document.querySelector(".valor20").value = "";
+  document.querySelector(".recebido").value = "";
+ }
 
-document.addEventListener("DOMContentLoaded", () => {
+ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btnCartao").addEventListener("click", () => {
-    selecionarPagamento("cartao");
+    selecionarPagamento("cartão");
     enviarVenda();
+    limparCampos();
   });
 
   document.getElementById("btnDinheiro").addEventListener("click", async () => {
@@ -36,15 +104,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const vendaRegistrada = await enviarVenda();
     if (vendaRegistrada) {
       imprimir();
+      limparCampos();
     }
+    limparCampos();
   });
-});
-// Função para selecionar o tipo de pagamento
-function selecionarPagamento(tipo) {
+ });
+ // Função para selecionar o tipo de pagamento
+ function selecionarPagamento(tipo) {
   formaPagamento = tipo;
-}
+ }
 
-async function enviarVenda() {
+ async function enviarVenda() {
   // Obtem os valores dos campos
   const valor12 = parseInt(document.querySelector(".valor12").value || 0);
   const valor20 = parseInt(document.querySelector(".valor20").value || 0);
@@ -55,49 +125,46 @@ async function enviarVenda() {
     return; // Interrompe a execução da função
   }
 
+  if (!lojaSelecionadaId) {
+    mostrarAlerta("Selecione uma loja antes de registrar uma venda.", "error");
+    return;
+  }
+
   // Obtem a hora e a data atual
   const horaAtual = new Date().toLocaleTimeString();
   const agora = new Date();
   const dataAtual = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}-${String(agora.getDate()).padStart(2, '0')}`;
-
-  console.log("Enviando venda: ", {
-    quantidade_12: valor12,
-    quantidade_20: valor20,
-    formaPagamento: formaPagamento,
-    hora: horaAtual,
-    data: dataAtual,
-  });
+  const total = (valor12 * 12) + (valor20 * 20);
 
   // Insere no Supabase
   const { data, error } = await supabase.from("vendas").insert([
     {
       quantidade_12: valor12,
       quantidade_20: valor20,
+      total: total,
       formaPagamento: formaPagamento,
       hora: horaAtual,
       data: dataAtual,
+      loja: lojaSelecionadaId
     },
   ]);
 
   // Verifica erros ou sucesso
   if (error) {
-    console.error("Erro ao inserir venda:", error);
     mostrarAlerta("Erro ao registrar a venda", "error");
   } else {
-    console.log("Venda inserida com sucesso:", data);
     mostrarAlerta("Venda registrada com sucesso!", "padrao");
     carregarVendas(); // Atualiza a tabela com os dados mais recentes
     return true;
   }
-}
+ }
 
-document.addEventListener("DOMContentLoaded", () => {
+ document.addEventListener("DOMContentLoaded", () => {
   // Adiciona o event listener ao botão
   document.getElementById("btn-filtrar").addEventListener("click", carregarVendas);
-});
+ });
 
-// Certifique-se de que a função está fora de qualquer bloco
-async function carregarVendas() {
+ async function carregarVendas() {
   const tabelaBody = document.querySelector(".tabela-body");
   tabelaBody.innerHTML = ""; // Limpa a tabela antes de preencher
 
@@ -108,47 +175,52 @@ async function carregarVendas() {
   if (!dataFiltro) {
     const agora = new Date();
     dataFiltro = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}-${String(agora.getDate()).padStart(2, '0')}`;
-    document.querySelector("#data-filtro").value = dataFiltro; // Preenche o input com a data atual
+    document.querySelector("#data-filtro").value = dataFiltro;
+  }
+
+  if (!lojaSelecionadaId) {
+    mostrarAlerta("selecione uma loja","error");
+    return;
   }
 
   try {
     let query = supabase.from("vendas").select("*");
 
-    // Aplica o filtro de data
+    // Aplica os filtros de data e loja
     query = query.eq("data", dataFiltro);
+
+    if (lojaSelecionadaId) {
+      query = query.eq("loja", lojaSelecionadaId); // Certifique-se de que essa coluna exista no Supabase
+    }
 
     const { data, error } = await query.order("hora", { ascending: false });
 
-    //lança um error
     if (error) throw error;
 
-    // Verifica se há dados retornados
     if (data.length === 0) {
-      tabelaBody.innerHTML = `<tr><td colspan="4" class="text-center">Nenhuma venda encontrada para a data selecionada.</td></tr>`;
+      tabelaBody.innerHTML = `<tr><td colspan="4" class="text-center">Nenhuma venda encontrada para a data e loja selecionadas.</td></tr>`;
       return;
     }
 
-    // Popula a tabela com os dados retornados
     data.forEach((venda) => {
       const linha = document.createElement("tr");
       linha.innerHTML = `
         <td>${venda.quantidade_12}</td>
         <td>${venda.quantidade_20}</td>
-        <td>R$ ${venda.total ? parseFloat(venda.total).toFixed(2) : '0.00'}</td>
+        <td>R$ ${!isNaN(venda.total) ? parseFloat(venda.total).toFixed(2): venda.total}</td>
         <td>${venda.hora}</td>
       `;
       tabelaBody.appendChild(linha);
     });
   } catch (error) {
-    console.error("Erro ao carregar vendas:", error);
-   // Repetir a exibição do erro a cada 15 segundos
-   setInterval(() => {
-    mostrarAlerta("Erro ao carregar vendas.", "error");
-  }, 4000); // 15 segundos
+    setTimeout(() => {
+      mostrarAlerta("Erro ao carregar vendas.", "error");
+    }, 15000);
   }
-}
+ }
 
-function mostrarAlerta(mensagem, tipo = 'padrao') {
+
+ function mostrarAlerta(mensagem, tipo = 'padrao') {
   const alertBox = document.querySelector(".dropbar");
   const alertMessage = document.getElementById("AlertMensagem");
 
@@ -174,24 +246,127 @@ function mostrarAlerta(mensagem, tipo = 'padrao') {
           alertBox.classList.remove("show", "hide"); // Reseta o estado
       }, 500); // Tempo da animação
   }, 3000);
-}
+ }
 
 
 
 
-// Função para imprimir
-function imprimir() {
+ //Função para imprimir
+ function imprimir() {
   try {
     window.print();
   } catch (error) {
     console.error("Erro ao imprimir:", error);
   }
+ }
+
+ // Event Listeners para cálculos automáticos
+ document.querySelector(".valor12").addEventListener("input", somarValores);
+ document.querySelector(".valor20").addEventListener("input", somarValores);
+ document.querySelector(".recebido").addEventListener("input", descontarValores);
+
+ // Chamada inicial para carregar vendas ao carregar a página
+ window.onload = () => carregarVendas();
+
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  const dropbar = document.getElementById("bordinha-dropbar");
+  const botao = document.getElementById("btndividi");
+  const confirmar = document.getElementById("confirmarDivisao");
+
+  // Alterna a visibilidade do dropbar ao clicar no botão
+  botao.addEventListener("click", () => {
+    dropbar.classList.toggle("d-none");
+  });
+
+  // Fecha o dropbar ao clicar fora dele
+  document.addEventListener("click", (event) => {
+    if (!dropbar.classList.contains("d-none")) {
+      if (!dropbar.contains(event.target) && !botao.contains(event.target)) {
+        dropbar.classList.add("d-none");
+      }
+    }
+  });
+
+  // Quando clicar no botão "Confirmar" da divisão de valores
+  confirmar.addEventListener("click", async () => {
+    await enviarVendamista();  
+    limparCampos();            
+    carregarVendas();          
+  });
+});
+
+
+
+async function enviarVendamista() {
+  const valorCartao = parseFloat(document.getElementById("valorCartao").value || 0);
+  const valorDinheiro = parseFloat(document.getElementById("valorDinheiro").value || 0);
+  const valor12 = parseInt(document.querySelector(".valor12").value || 0);
+  const valor20 = parseInt(document.querySelector(".valor20").value || 0);
+
+  // Verifica se alguma quantidade foi informada
+  if (valor12 === 0 && valor20 === 0) {
+    mostrarAlerta("Insira uma quantidade válida", "error");
+    return;
+  }
+
+  if (!lojaSelecionadaId) {
+    mostrarAlerta("Selecione uma loja antes de registrar a venda.", "error");
+    return;
+  }
+
+  const totalCalculado = valor12 * 12 + valor20 * 20;
+  const totalInformado = valorCartao + valorDinheiro;
+
+  if (totalCalculado > totalInformado) {
+    mostrarAlerta(`Total calculado (R$${totalCalculado.toFixed(2)}) diferente do valor pago (R$${totalInformado.toFixed(2)}).`, "error");
+    return;
+  }
+
+  let formaPagamento = "";
+  let total = "";
+
+  if (valorCartao > 0 && valorDinheiro === 0) {
+    formaPagamento = "cartão";
+    total = valorCartao;
+    selecionarPagamento("cartão");
+  } else if (valorDinheiro > 0 && valorCartao === 0) {
+    formaPagamento = "dinheiro";
+    total = valorDinheiro;
+    selecionarPagamento("dinheiro");
+    imprimir();
+  } else if (valorCartao > 0 && valorDinheiro > 0) {
+    formaPagamento = "mista";
+    total = `${valorCartao} / ${valorDinheiro}`;
+    selecionarPagamento("mista");
+    imprimir();
+  } else {
+    mostrarAlerta("Informe um valor válido em dinheiro ou cartão.", "error");
+    return;
+  }
+
+  // Data e hora
+  const horaAtual = new Date().toLocaleTimeString();
+  const agora = new Date();
+  const dataAtual = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}-${String(agora.getDate()).padStart(2, '0')}`;
+
+  // Inserção no Supabase
+  const { data, error } = await supabase.from("vendas").insert([{
+    quantidade_12: valor12,
+    quantidade_20: valor20,
+    total: total,
+    formaPagamento: formaPagamento,
+    hora: horaAtual,
+    data: dataAtual,
+    loja: lojaSelecionadaId
+  }]);
+
+  if (error) {
+    mostrarAlerta("Erro ao registrar a venda", "error");
+  } else {
+    mostrarAlerta("Venda registrada com sucesso!", "padrao");
+    limparCampos();
+    document.getElementById("bordinha-dropbar").classList.add("d-none");
+  }
 }
-
-// Event Listeners para cálculos automáticos
-document.querySelector(".valor12").addEventListener("input", somarValores);
-document.querySelector(".valor20").addEventListener("input", somarValores);
-document.querySelector(".recebido").addEventListener("input", descontarValores);
-
-// Chamada inicial para carregar vendas ao carregar a página
-window.onload = () => carregarVendas();

@@ -9,8 +9,11 @@ app.on('ready', () => {
     // abrir uma nova tela do windows
     mainWindow = new BrowserWindow({
         fullscreen: true,
-        // mudar o icone para um melhor 
-        icon: __dirname + "/imagens/logo.png"
+        // mudar o icone
+        icon: __dirname + "/imagens/logo.png",
+        // remove barra branca e botaoes de minimizar e fechar
+        autoHideMenuBar: true,
+        frame: false
     });
     mainWindow.loadFile(path.join(__dirname, 'caixa.html'));
 });
