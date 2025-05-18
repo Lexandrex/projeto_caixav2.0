@@ -3,7 +3,7 @@ import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 const SUPABASE_URL = 'https://npvyxmorsaitlpscbcgq.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wdnl4bW9yc2FpdGxwc2NiY2dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU0NTAyMDEsImV4cCI6MjA2MTAyNjIwMX0.VSLgSvLOYgEhul-QbXXIb4r91HD6_r76__QzElzOulM';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
+let salvando = false;
 let contadorCliques = 0;
 let tempoUltimoClique = 0;
 const LIMITE_CLIQUES = 5;
@@ -115,6 +115,12 @@ async function carregarLojas() {
  }
 
  async function enviarVenda() {
+const cod = crypto.randomUUID();
+  if (salvando) return;
+  salvando = true;
+  btnCartao.disabled = true;
+  btnDinheiro.disabled = true;
+
   // Obtem os valores dos campos
   const valor12 = parseInt(document.querySelector(".valor12").value || 0);
   const valor20 = parseInt(document.querySelector(".valor20").value || 0);
@@ -122,11 +128,17 @@ async function carregarLojas() {
   // Verifica se os valores de quantidade são inválidos
   if (valor12 === 0 && valor20 === 0) {
     mostrarAlerta("Por favor, insira pelo menos um valor válido para registrar uma venda.", "error");
+    salvando = false;
+  btnCartao.disabled = false;
+  btnDinheiro.disabled = false;
     return; // Interrompe a execução da função
   }
 
   if (!lojaSelecionadaId) {
     mostrarAlerta("Selecione uma loja antes de registrar uma venda.", "error");
+    salvando = false;
+  btnCartao.disabled = false;
+  btnDinheiro.disabled = false;
     return;
   }
 
@@ -139,6 +151,7 @@ async function carregarLojas() {
   // Insere no Supabase
   const { data, error } = await supabase.from("vendas").insert([
     {
+      cod: cod,
       quantidade_12: valor12,
       quantidade_20: valor20,
       total: total,
@@ -155,8 +168,12 @@ async function carregarLojas() {
   } else {
     mostrarAlerta("Venda registrada com sucesso!", "padrao");
     carregarVendas(); // Atualiza a tabela com os dados mais recentes
-    return true;
   }
+
+  salvando = false;
+  btnCartao.disabled = false;
+  btnDinheiro.disabled = false;
+  return true;
  }
 
  document.addEventListener("DOMContentLoaded", () => {
@@ -266,7 +283,8 @@ async function carregarLojas() {
  document.querySelector(".recebido").addEventListener("input", descontarValores);
 
  // Chamada inicial para carregar vendas ao carregar a página
- window.onload = () => carregarVendas();
+ //window.onload = () => carregarVendas();
+ window.onload = () => mostrarAlerta("selecione uma loja", "error");
 
 
 
@@ -300,73 +318,83 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 async function enviarVendamista() {
-  const valorCartao = parseFloat(document.getElementById("valorCartao").value || 0);
-  const valorDinheiro = parseFloat(document.getElementById("valorDinheiro").value || 0);
-  const valor12 = parseInt(document.querySelector(".valor12").value || 0);
-  const valor20 = parseInt(document.querySelector(".valor20").value || 0);
+ const cod = crypto.randomUUID();
+  const btn = document.getElementById("confirmarDivisao");
+  if (salvando) return;
+  salvando = true;
+  btn.disabled = true;
 
-  // Verifica se alguma quantidade foi informada
-  if (valor12 === 0 && valor20 === 0) {
-    mostrarAlerta("Insira uma quantidade válida", "error");
-    return;
-  }
+  try {
+    const valorCartao = parseFloat(document.getElementById("valorCartao").value || 0);
+    const valorDinheiro = parseFloat(document.getElementById("valorDinheiro").value || 0);
+    const valor12 = parseInt(document.querySelector(".valor12").value || 0);
+    const valor20 = parseInt(document.querySelector(".valor20").value || 0);
 
-  if (!lojaSelecionadaId) {
-    mostrarAlerta("Selecione uma loja antes de registrar a venda.", "error");
-    return;
-  }
+    if (valor12 === 0 && valor20 === 0) {
+      mostrarAlerta("Insira uma quantidade válida", "error");
+      return;
+    }
 
-  const totalCalculado = valor12 * 12 + valor20 * 20;
-  const totalInformado = valorCartao + valorDinheiro;
+    if (!lojaSelecionadaId) {
+      mostrarAlerta("Selecione uma loja antes de registrar a venda.", "error");
+      return;
+    }
 
-  if (totalCalculado > totalInformado) {
-    mostrarAlerta(`Total calculado (R$${totalCalculado.toFixed(2)}) diferente do valor pago (R$${totalInformado.toFixed(2)}).`, "error");
-    return;
-  }
+    const totalCalculado = valor12 * 12 + valor20 * 20;
+    const totalInformado = valorCartao + valorDinheiro;
 
-  let formaPagamento = "";
-  let total = "";
+    if (totalCalculado > totalInformado) {
+      mostrarAlerta(`Total calculado (R$${totalCalculado.toFixed(2)}) diferente do valor pago (R$${totalInformado.toFixed(2)}).`, "error");
+      return;
+    }
 
-  if (valorCartao > 0 && valorDinheiro === 0) {
-    formaPagamento = "cartão";
-    total = valorCartao;
-    selecionarPagamento("cartão");
-  } else if (valorDinheiro > 0 && valorCartao === 0) {
-    formaPagamento = "dinheiro";
-    total = valorDinheiro;
-    selecionarPagamento("dinheiro");
-    imprimir();
-  } else if (valorCartao > 0 && valorDinheiro > 0) {
-    formaPagamento = "mista";
-    total = `${valorCartao} / ${valorDinheiro}`;
-    selecionarPagamento("mista");
-    imprimir();
-  } else {
-    mostrarAlerta("Informe um valor válido em dinheiro ou cartão.", "error");
-    return;
-  }
+    let formaPagamento = "";
+    let total = "";
 
-  // Data e hora
-  const horaAtual = new Date().toLocaleTimeString();
-  const agora = new Date();
-  const dataAtual = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}-${String(agora.getDate()).padStart(2, '0')}`;
+    if (valorCartao > 0 && valorDinheiro === 0) {
+      formaPagamento = "cartão";
+      total = valorCartao;
+      selecionarPagamento("cartão");
+    } else if (valorDinheiro > 0 && valorCartao === 0) {
+      formaPagamento = "dinheiro";
+      total = valorDinheiro;
+      selecionarPagamento("dinheiro");
+      imprimir();
+    } else if (valorCartao > 0 && valorDinheiro > 0) {
+      formaPagamento = "mista";
+      total = `${valorCartao} / ${valorDinheiro}`;
+      selecionarPagamento("mista");
+      imprimir();
+    } else {
+      mostrarAlerta("Informe um valor válido em dinheiro ou cartão.", "error");
+      return;
+    }
 
-  // Inserção no Supabase
-  const { data, error } = await supabase.from("vendas").insert([{
-    quantidade_12: valor12,
-    quantidade_20: valor20,
-    total: total,
-    formaPagamento: formaPagamento,
-    hora: horaAtual,
-    data: dataAtual,
-    loja: lojaSelecionadaId
-  }]);
+    const horaAtual = new Date().toLocaleTimeString();
+    const agora = new Date();
+    const dataAtual = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}-${String(agora.getDate()).padStart(2, '0')}`;
 
-  if (error) {
-    mostrarAlerta("Erro ao registrar a venda", "error");
-  } else {
-    mostrarAlerta("Venda registrada com sucesso!", "padrao");
-    limparCampos();
-    document.getElementById("bordinha-dropbar").classList.add("d-none");
+    const { data, error } = await supabase.from("vendas").insert([{
+      cod: cod,
+      quantidade_12: valor12,
+      quantidade_20: valor20,
+      total: total,
+      formaPagamento: formaPagamento,
+      hora: horaAtual,
+      data: dataAtual,
+      loja: lojaSelecionadaId
+    }]);
+
+    if (error) {
+      mostrarAlerta("Erro ao registrar a venda", "error");
+    } else {
+      mostrarAlerta("Venda registrada com sucesso!", "padrao");
+      limparCampos();
+      document.getElementById("bordinha-dropbar").classList.add("d-none");
+    }
+
+  } finally {
+    salvando = false;
+    btn.disabled = false;
   }
 }

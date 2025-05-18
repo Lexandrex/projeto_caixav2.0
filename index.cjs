@@ -13,7 +13,7 @@ app.on('ready', () => {
         icon: __dirname + "/imagens/logo.png",
         // remove barra branca e botaoes de minimizar e fechar
         autoHideMenuBar: true,
-        frame: false
+        frame: false,
     });
     mainWindow.loadFile(path.join(__dirname, 'caixa.html'));
 });
