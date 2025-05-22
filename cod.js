@@ -1,8 +1,6 @@
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-
 const SUPABASE_URL = 'https://npvyxmorsaitlpscbcgq.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wdnl4bW9yc2FpdGxwc2NiY2dxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU0NTAyMDEsImV4cCI6MjA2MTAyNjIwMX0.VSLgSvLOYgEhul-QbXXIb4r91HD6_r76__QzElzOulM';
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : undefined;
 let salvando = false;
 let contadorCliques = 0;
 let tempoUltimoClique = 0;
@@ -10,22 +8,77 @@ const LIMITE_CLIQUES = 5;
 const INTERVALO_MAX = 3000; // 3 segundos entre cliques
 let lojaSelecionadaId = null;
 
-document.getElementById("btn-lojas").addEventListener("click", () => {
-  const agora = Date.now();
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("btn-lojas").addEventListener("click", () => {
+    const agora = Date.now();
 
-  // Reinicia se demorar demais
-  if (agora - tempoUltimoClique > INTERVALO_MAX) {
-    contadorCliques = 0;
-  }
+    // Reinicia se demorar demais
+    if (agora - tempoUltimoClique > INTERVALO_MAX) {
+      contadorCliques = 0;
+    }
 
-  contadorCliques++;
-  tempoUltimoClique = agora;
+    contadorCliques++;
+    tempoUltimoClique = agora;
 
-  if (contadorCliques === LIMITE_CLIQUES) {
-    contadorCliques = 0;
-    document.getElementById("dropdown-lojas").classList.remove("d-none");
-    carregarLojas();
-  }
+    if (contadorCliques === LIMITE_CLIQUES) {
+      contadorCliques = 0;
+      document.getElementById("dropdown-lojas").classList.remove("d-none");
+      carregarLojas();
+    }
+  });
+
+  document.getElementById("btnCartao").addEventListener("click", () => {
+    selecionarPagamento("cartão");
+    enviarVenda();
+    limparCampos();
+  });
+
+  document.getElementById("btnDinheiro").addEventListener("click", async () => {
+    selecionarPagamento("dinheiro");
+    const vendaRegistrada = await enviarVenda();
+    if (vendaRegistrada) {
+      imprimir();
+      limparCampos();
+    }
+    limparCampos();
+  });
+
+  // Adiciona o event listener ao botão
+  document.getElementById("btn-filtrar").addEventListener("click", carregarVendas);
+
+  const dropbar = document.getElementById("bordinha-dropbar");
+  const botao = document.getElementById("btndividi");
+  const confirmar = document.getElementById("confirmarDivisao");
+
+  // Alterna a visibilidade do dropbar ao clicar no botão
+  botao.addEventListener("click", () => {
+    dropbar.classList.toggle("d-none");
+  });
+
+  // Fecha o dropbar ao clicar fora dele
+  document.addEventListener("click", (event) => {
+    if (!dropbar.classList.contains("d-none")) {
+      if (!dropbar.contains(event.target) && !botao.contains(event.target)) {
+        dropbar.classList.add("d-none");
+      }
+    }
+  });
+
+  // Quando clicar no botão "Confirmar" da divisão de valores
+  confirmar.addEventListener("click", async () => {
+    await enviarVendamista();  
+    limparCampos();            
+    carregarVendas();          
+  });
+
+  // Event Listeners para cálculos automáticos
+  document.querySelector(".valor12").addEventListener("input", somarValores);
+  document.querySelector(".valor20").addEventListener("input", somarValores);
+  document.querySelector(".recebido").addEventListener("input", descontarValores);
+
+  // window.onload não é mais necessário, pois DOMContentLoaded cobre o carregamento
+  // window.onload = () => mostrarAlerta("selecione uma loja", "error");
+  mostrarAlerta("selecione uma loja", "error");
 });
 
 async function carregarLojas() {
@@ -50,6 +103,18 @@ async function carregarLojas() {
 
       // Atualiza o texto do botão
       document.getElementById("lojaSelecionadaLabel").textContent = `Loja: ${loja.nome}`;
+
+      // Atualiza a faixa verde do topo
+      const faixa = document.querySelector('.faixa');
+      if (faixa) {
+        faixa.textContent = loja.nome;
+        faixa.style.color = '#fff';
+        faixa.style.textAlign = 'center';
+        faixa.style.display = 'flex';
+        faixa.style.justifyContent = 'center';
+        faixa.style.alignItems = 'center';
+        faixa.style.height = '3rem';
+      }
 
       // Oculta novamente o dropdown
       document.getElementById("dropdown-lojas").classList.add("d-none");
@@ -92,23 +157,6 @@ async function carregarLojas() {
   document.querySelector(".recebido").value = "";
  }
 
- document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("btnCartao").addEventListener("click", () => {
-    selecionarPagamento("cartão");
-    enviarVenda();
-    limparCampos();
-  });
-
-  document.getElementById("btnDinheiro").addEventListener("click", async () => {
-    selecionarPagamento("dinheiro");
-    const vendaRegistrada = await enviarVenda();
-    if (vendaRegistrada) {
-      imprimir();
-      limparCampos();
-    }
-    limparCampos();
-  });
- });
  // Função para selecionar o tipo de pagamento
  function selecionarPagamento(tipo) {
   formaPagamento = tipo;
@@ -168,6 +216,20 @@ const cod = crypto.randomUUID();
   } else {
     mostrarAlerta("Venda registrada com sucesso!", "padrao");
     carregarVendas(); // Atualiza a tabela com os dados mais recentes
+    // Pega os valores para recibo
+    const recebido = parseFloat(document.querySelector(".recebido").value || 0);
+    const troco = recebido - total;
+    if (window.electronAPI && typeof window.electronAPI.imprimirRecibo === 'function') {
+      window.electronAPI.imprimirRecibo({
+        qtd12: valor12,
+        qtd20: valor20,
+        total: total.toFixed(2),
+        entregue: recebido.toFixed(2),
+        troco: troco.toFixed(2),
+        data: dataAtual,
+        hora: horaAtual
+      });
+    }
   }
 
   salvando = false;
@@ -175,11 +237,6 @@ const cod = crypto.randomUUID();
   btnDinheiro.disabled = false;
   return true;
  }
-
- document.addEventListener("DOMContentLoaded", () => {
-  // Adiciona o event listener ao botão
-  document.getElementById("btn-filtrar").addEventListener("click", carregarVendas);
- });
 
  async function carregarVendas() {
   const tabelaBody = document.querySelector(".tabela-body");
@@ -270,52 +327,25 @@ const cod = crypto.randomUUID();
 
  //Função para imprimir
  function imprimir() {
+  if (!window.electronAPI || typeof window.electronAPI.imprimirPagina !== 'function') {
+    console.error('electronAPI.imprimirPagina não está disponível. Verifique o preload e as configurações do Electron.');
+    mostrarAlerta('Função de impressão não disponível.', 'error');
+    return;
+  }
   try {
-    window.print();
+    window.electronAPI.imprimirPagina();
   } catch (error) {
-    console.error("Erro ao imprimir:", error);
+    console.error('Erro ao imprimir:', error);
+    mostrarAlerta('Erro ao imprimir.', 'error');
   }
  }
 
- // Event Listeners para cálculos automáticos
- document.querySelector(".valor12").addEventListener("input", somarValores);
- document.querySelector(".valor20").addEventListener("input", somarValores);
- document.querySelector(".recebido").addEventListener("input", descontarValores);
-
- // Chamada inicial para carregar vendas ao carregar a página
- //window.onload = () => carregarVendas();
- window.onload = () => mostrarAlerta("selecione uma loja", "error");
-
-
-
-document.addEventListener("DOMContentLoaded", () => {
-  const dropbar = document.getElementById("bordinha-dropbar");
-  const botao = document.getElementById("btndividi");
-  const confirmar = document.getElementById("confirmarDivisao");
-
-  // Alterna a visibilidade do dropbar ao clicar no botão
-  botao.addEventListener("click", () => {
-    dropbar.classList.toggle("d-none");
-  });
-
-  // Fecha o dropbar ao clicar fora dele
-  document.addEventListener("click", (event) => {
-    if (!dropbar.classList.contains("d-none")) {
-      if (!dropbar.contains(event.target) && !botao.contains(event.target)) {
-        dropbar.classList.add("d-none");
-      }
-    }
-  });
-
-  // Quando clicar no botão "Confirmar" da divisão de valores
-  confirmar.addEventListener("click", async () => {
-    await enviarVendamista();  
-    limparCampos();            
-    carregarVendas();          
-  });
-});
-
-
+function imprimirRecibo({ qtd12, qtd20, total, entregue, troco, data, hora }) {
+  const params = new URLSearchParams({
+    qtd12, qtd20, total, entregue, troco, data, hora
+  }).toString();
+  const win = window.open('recibo.html?' + params, '_blank', 'width=350,height=500');
+}
 
 async function enviarVendamista() {
  const cod = crypto.randomUUID();

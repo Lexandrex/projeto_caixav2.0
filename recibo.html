@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: monospace; font-size: 14px; margin: 0; padding: 10px; }
+    .linha { border-bottom: 1px dashed #000; margin: 8px 0; }
+    .center { text-align: center; }
+    .right { text-align: right; }
+  </style>
+</head>
+<body>
+  <div class="center"><strong>RECIBO DE VENDA</strong></div>
+  <div class="linha"></div>
+  <div>Data: <span id="data"></span> Hora: <span id="hora"></span></div>
+  <div class="linha"></div>
+  <div>Qtd 12,00: <span id="qtd12"></span></div>
+  <div>Qtd 20,00: <span id="qtd20"></span></div>
+  <div class="linha"></div>
+  <div>Total: <span id="total"></span></div>
+  <div>Valor Entregue: <span id="entregue"></span></div>
+  <div>Troco: <span id="troco"></span></div>
+  <div class="linha"></div>
+  <div class="center">Obrigado pela preferência!</div>
+  <script>
+    // Recebe os dados via query string
+    function getParam(name) {
+      const url = new URL(window.location.href);
+      return url.searchParams.get(name) || '';
+    }
+    document.getElementById('qtd12').textContent = getParam('qtd12');
+    document.getElementById('qtd20').textContent = getParam('qtd20');
+    document.getElementById('total').textContent = getParam('total');
+    document.getElementById('entregue').textContent = getParam('entregue');
+    document.getElementById('troco').textContent = getParam('troco');
+    document.getElementById('data').textContent = getParam('data');
+    document.getElementById('hora').textContent = getParam('hora');
+    window.onload = () => setTimeout(() => window.print(), 300);
+  </script>
+</body>
+</html>
